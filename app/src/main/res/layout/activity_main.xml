@@ -1,0 +1,83 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:id="@+id/design"
+            android:layout_marginTop="40dp"
+            android:layout_centerHorizontal="true"
+            android:layout_width="match_parent"
+            android:layout_height="400dp">
+
+            <ImageView
+                android:id="@+id/imageView3"
+                android:layout_width="428dp"
+                android:layout_height="580dp"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/rec"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="-13dp"
+                tools:layout_editor_absoluteY="-143dp" />
+
+            <TextView
+                android:layout_centerHorizontal="true"
+                android:id="@+id/textView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="WELCOME TO"
+                android:textColor="@color/black"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="111dp"
+                tools:layout_editor_absoluteY="62dp" />
+
+            <ImageView
+                android:layout_centerHorizontal="true"
+                android:id="@+id/imageView4"
+                android:layout_width="359dp"
+                android:layout_height="376dp"
+                android:src="@drawable/lgo1"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="26dp"
+                tools:layout_editor_absoluteY="62dp" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/design"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:layout_centerInParent="true"
+                android:id="@+id/letsGo"
+                android:layout_width="319dp"
+                android:layout_height="60dp"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentBottom="true"
+                android:layout_marginEnd="46dp"
+                android:layout_marginBottom="194dp"
+                android:background="@drawable/bg_btn2"
+                android:text="LET'S GO   >"
+                android:textAllCaps="false"
+                android:textColor="#1069E3"
+                android:textSize="20sp"
+                tools:ignore="MissingConstraints"
+                tools:layout_editor_absoluteX="46dp"
+                tools:layout_editor_absoluteY="582dp" />
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
