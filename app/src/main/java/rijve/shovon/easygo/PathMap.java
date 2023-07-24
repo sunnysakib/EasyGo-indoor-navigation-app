@@ -114,7 +114,7 @@ public class PathMap extends AppCompatActivity {
             }
             System.out.println(nodeInfo);
             System.out.println(edgeInfo);
-            myCanvas.setNodeData(nodeInfo,edgeInfo);
+            //myCanvas.setNodeData(nodeInfo,edgeInfo);
         }
 
     }

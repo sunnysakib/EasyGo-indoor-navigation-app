@@ -30,7 +30,7 @@ public class Map_node extends AppCompatActivity {
     private Button btnZoomIn;
     private Button btnZoomOut;
     private RequestQueue requestQueue;
-    private String nodedatastring = "";
+    private String nodedatastring = "",edgeDataString="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +67,101 @@ public class Map_node extends AppCompatActivity {
         // Fetch node data and create circles on canvas
         new FetchNodeDataTask().execute();
     }
+
+
+    private class FetchNodeEdgeDataTask extends AsyncTask<Void, Void, String> {
+        private static final String API_URL = "https://lgorithmbd.com/php_rest_app/api/edgeinfo/read.php";
+
+        @Override
+        protected String doInBackground(Void... params) {
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+            String result = null;
+
+            try {
+                // Create the URL object
+                URL url = new URL(API_URL);
+
+                // Create the HTTP connection
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+
+                // Connect to the API
+                urlConnection.connect();
+
+                // Read the response
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuilder builder = new StringBuilder();
+
+                if (inputStream != null) {
+                    reader = new BufferedReader(new InputStreamReader(inputStream));
+                    String line;
+
+                    while ((line = reader.readLine()) != null) {
+                        builder.append(line);
+                    }
+
+                    result = builder.toString();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                // Close the connections and readers
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                try {
+                    // Parse the JSON response
+                    JSONObject response = new JSONObject(result);
+                    JSONArray data = response.getJSONArray("data");
+
+                    // Iterate over the JSON array and add nodes to the nodeList
+                    for (int i = 0; i < data.length(); i++) {
+                        JSONObject nodeObject = data.getJSONObject(i);
+                        String nodeName1 = nodeObject.getString("node1");
+                        String nodeName2 = nodeObject.getString("node2");
+                        String nodeDistance   = nodeObject.getString("distance");
+                        if(nodeName1.equals("campus")) continue;
+                        if(edgeDataString.isEmpty()){
+                            edgeDataString += nodeName1+"_"+nodeName2 + "_" + nodeDistance;
+                        }
+                        else{
+                            edgeDataString += "___"+nodeName1+"_"+nodeName2 + "_" + nodeDistance;
+                        }
+                    }
+                    Toast.makeText(Map_node.this, "Data fetch data" + nodedatastring, Toast.LENGTH_SHORT).show();
+                    System.out.println(edgeDataString);
+                    // Create circles on canvas using the node data
+                    //need to remove it later
+
+                    //String fakeData="campus main_0_0_1___reception_0_10_1___A_0_15_1___central lobby_0_20_1___B_0_30_1___Room102_0_50_1___Moshjid_0_60_1___C_0_65_1___Lift1_-5_65_1___Room103_-10_67_1___Room105_-15_67_1___toilet1_-20_67_1___Room107_-30_67_1___Room110_-40_67_1___Room104_-10_63_1___Room106_-15_63_1___Room108_-20_63_1___Room109_-30_63_1___Room111_-40_63_1___Stairs1_-10_15_1___Toilet2_-15_15_1___Auditorium_-40_15_1___FUB Entry_-50_15_1";
+                    //String fakeDataEdge = "campus main_0_0_1_reception_0_10_1_10@reception_0_10_1_A_0_15_1_5@A_0_15_1_central lobby_0_20_1_5@A_0_15_1_Stairs1_-10_15_1_10@central lobby_0_20_1_B_0_30_1_10@B_0_30_1_Room102_0_50_1_20@Room102_0_50_1_Moshjid_0_60_1_10@Moshjid_0_60_1_C_0_65_1_5@C_0_65_1_Lift1_-5_65_1_5@Lift1_-5_65_1_Room103_-10_67_1_7@Lift1_-5_65_1_Room104_-10_63_1_7@Room103_-10_67_1_Room105_-15_67_1_5@Room105_-15_67_1_toilet1_-20_67_1_5@toilet1_-20_67_1_Room107_-30_67_1_10@Room107_-30_67_1_Room110_-40_67_1_10@Room104_-10_63_1_Room106_-15_63_1_5@Room106_-15_63_1_Room108_-20_63_1_5@Room108_-20_63_1_Room109_-30_63_1_10@Room109_-30_63_1_Room111_-40_63_1_10@Stairs1_-10_15_1_Toilet2_-15_15_1_5@Toilet2_-15_15_1_Auditorium_-40_15_1_25@Auditorium_-40_15_1_FUB Entry_-50_15_1_10";
+                    myCanvas.setNodeData(nodedatastring,edgeDataString);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Toast.makeText(Map_node.this, "Failed to fetch node data", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
 
     private class FetchNodeDataTask extends AsyncTask<Void, Void, String> {
         private static final String API_URL = "https://lgorithmbd.com/php_rest_app/api/nodeinfo/read.php";
@@ -133,21 +228,26 @@ public class Map_node extends AppCompatActivity {
                     for (int i = 0; i < data.length(); i++) {
                         JSONObject nodeObject = data.getJSONObject(i);
                         String id = nodeObject.getString("id");
-                        String nodeNumber = nodeObject.getString("node_number");
+                        String nodeName = nodeObject.getString("node_number");
                         double nodeX = nodeObject.getDouble("node_x");
                         double nodeY = nodeObject.getDouble("node_y");
                         double nodeZ = nodeObject.getDouble("node_z");
-
-                        nodedatastring += nodeX + "_" + nodeY + "_" + nodeZ + "___";
+                        if(nodedatastring.isEmpty()){
+                            nodedatastring += nodeName+"_"+nodeX + "_" + nodeY + "_" + nodeZ;
+                        }
+                        else{
+                            nodedatastring += "___"+nodeName+"_"+nodeX + "_" + nodeY + "_" + nodeZ;
+                        }
                     }
                     Toast.makeText(Map_node.this, "Data fetch data" + nodedatastring, Toast.LENGTH_SHORT).show();
-
+                    System.out.println(nodedatastring);
+                    new Map_node.FetchNodeEdgeDataTask().execute();
                     // Create circles on canvas using the node data
                     //need to remove it later
-                    String fakeData="campus main_0_0_1___reception_0_10_1___A_0_15_1___central lobby_0_20_1___B_0_30_1___Room102_0_50_1___Moshjid_0_60_1___C_0_65_1___Lift1_-5_65_1___Room103_-10_67_1___Room105_-15_67_1___toilet1_-20_67_1___Room107_-30_67_1___Room110_-40_67_1___Room104_-10_63_1___Room106_-15_63_1___Room108_-20_63_1___Room109_-30_63_1___Room111_-40_63_1___Stairs1_-10_15_1___Toilet2_-15_15_1___Auditorium_-40_15_1___FUB Entry_-50_15_1";
 
-                    String fakeDataEdge = "campus main_0_0_1_reception_0_10_1_10@reception_0_10_1_A_0_15_1_5@A_0_15_1_central lobby_0_20_1_5@A_0_15_1_Stairs1_-10_15_1_10@central lobby_0_20_1_B_0_30_1_10@B_0_30_1_Room102_0_50_1_20@Room102_0_50_1_Moshjid_0_60_1_10@Moshjid_0_60_1_C_0_65_1_5@C_0_65_1_Lift1_-5_65_1_5@Lift1_-5_65_1_Room103_-10_67_1_7@Lift1_-5_65_1_Room104_-10_63_1_7@Room103_-10_67_1_Room105_-15_67_1_5@Room105_-15_67_1_toilet1_-20_67_1_5@toilet1_-20_67_1_Room107_-30_67_1_10@Room107_-30_67_1_Room110_-40_67_1_10@Room104_-10_63_1_Room106_-15_63_1_5@Room106_-15_63_1_Room108_-20_63_1_5@Room108_-20_63_1_Room109_-30_63_1_10@Room109_-30_63_1_Room111_-40_63_1_10@Stairs1_-10_15_1_Toilet2_-15_15_1_5@Toilet2_-15_15_1_Auditorium_-40_15_1_25@Auditorium_-40_15_1_FUB Entry_-50_15_1_10";
-                    myCanvas.setNodeData(fakeData,fakeDataEdge);
+//                    String fakeData="campus main_0_0_1___reception_0_10_1___A_0_15_1___central lobby_0_20_1___B_0_30_1___Room102_0_50_1___Moshjid_0_60_1___C_0_65_1___Lift1_-5_65_1___Room103_-10_67_1___Room105_-15_67_1___toilet1_-20_67_1___Room107_-30_67_1___Room110_-40_67_1___Room104_-10_63_1___Room106_-15_63_1___Room108_-20_63_1___Room109_-30_63_1___Room111_-40_63_1___Stairs1_-10_15_1___Toilet2_-15_15_1___Auditorium_-40_15_1___FUB Entry_-50_15_1";
+//                    String fakeDataEdge = "campus main_0_0_1_reception_0_10_1_10@reception_0_10_1_A_0_15_1_5@A_0_15_1_central lobby_0_20_1_5@A_0_15_1_Stairs1_-10_15_1_10@central lobby_0_20_1_B_0_30_1_10@B_0_30_1_Room102_0_50_1_20@Room102_0_50_1_Moshjid_0_60_1_10@Moshjid_0_60_1_C_0_65_1_5@C_0_65_1_Lift1_-5_65_1_5@Lift1_-5_65_1_Room103_-10_67_1_7@Lift1_-5_65_1_Room104_-10_63_1_7@Room103_-10_67_1_Room105_-15_67_1_5@Room105_-15_67_1_toilet1_-20_67_1_5@toilet1_-20_67_1_Room107_-30_67_1_10@Room107_-30_67_1_Room110_-40_67_1_10@Room104_-10_63_1_Room106_-15_63_1_5@Room106_-15_63_1_Room108_-20_63_1_5@Room108_-20_63_1_Room109_-30_63_1_10@Room109_-30_63_1_Room111_-40_63_1_10@Stairs1_-10_15_1_Toilet2_-15_15_1_5@Toilet2_-15_15_1_Auditorium_-40_15_1_25@Auditorium_-40_15_1_FUB Entry_-50_15_1_10";
+//                    myCanvas.setNodeData(fakeData,fakeDataEdge);
 
                 } catch (JSONException e) {
                     e.printStackTrace();

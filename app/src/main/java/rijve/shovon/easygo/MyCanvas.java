@@ -23,6 +23,9 @@ import android.view.ScaleGestureDetector;
 public class MyCanvas extends View {
     private Bitmap backgroundImage;
     private Canvas canvas;
+
+    private HashMap<String, CircleCoordinates> coordinateObjectHashMap = new HashMap<>();
+    private CircleCoordinates tempCircleCoordinateObject;
     private float zoomFactor = 1.0f;
     //    private float translateX = 0.0f;
 //    private float translateY = 0.0f;
@@ -86,45 +89,60 @@ public class MyCanvas extends View {
         return canvas;
     }
 
-    public Bitmap getBitmap() {
-        return backgroundImage;
-    }
-    // node 1 node 2  distance....
+
+
     public void setNodeData(String nodeDataString , String nodeEdgeString) {
         ArrayList<CircleCoordinates> circleCoordinatesList = new ArrayList<>();
-        ArrayList<LineCoordinates> lineCoordinatesList = new ArrayList<>();
+        ArrayList<LineCoordinates> lineCoordinatesArrayList = new ArrayList<>();
         String[] nodeDataArray = nodeDataString.split("___");
-        String[] edgeDataArray = nodeEdgeString.split("@");
+        String[] edgeDataArray = nodeEdgeString.split("___");
+
+        for (String nodeData : nodeDataArray) {
+            String[] coordinates = nodeData.split("_");
+
+            String nodeName = coordinates[0];
+            float nodeX = Float.parseFloat(coordinates[1])*50*(-1);
+            float nodeY = Float.parseFloat(coordinates[2])*50;
+            float nodeZ = Float.parseFloat(coordinates[3])*50;
+            // Add the CircleCoordinates object to the ArrayList
+            tempCircleCoordinateObject = new CircleCoordinates(nodeX, nodeY,nodeZ,nodeName);
+            coordinateObjectHashMap.put(nodeName,tempCircleCoordinateObject);
+            System.out.println(nodeName+"->"+tempCircleCoordinateObject.getX());
+            circleCoordinatesList.add(tempCircleCoordinateObject);
+
+        }
+
 
         for(String edgeInfo: edgeDataArray){
             String[] edgeDetails = edgeInfo.split("_");
 
+            String nodeName1 = edgeDetails[0];
+            String nodeName2 = edgeDetails[1];
+            float distance = Float.parseFloat(edgeDetails[2]);
 
-            float nodeX1 =Float.parseFloat(edgeDetails[1])*50;
-            float nodeY1 = Float.parseFloat(edgeDetails[2])*50;
-            float nodeX2 =Float.parseFloat(edgeDetails[5])*50;
-            float nodeY2 = Float.parseFloat(edgeDetails[6])*50;
 
-            lineCoordinatesList.add(new LineCoordinates((nodeX1*(-1)), nodeY1,nodeX2*(-1), nodeY2));
+            tempCircleCoordinateObject = coordinateObjectHashMap.get(nodeName1);
+            float nodeX1 =tempCircleCoordinateObject.getX();
+            float nodeY1 = tempCircleCoordinateObject.getY();
+            float nodeZ1 = tempCircleCoordinateObject.getZ();
+
+            tempCircleCoordinateObject = coordinateObjectHashMap.get(nodeName2);
+            float nodeX2 =tempCircleCoordinateObject.getX();
+            float nodeY2 = tempCircleCoordinateObject.getY();
+            float nodeZ2 = tempCircleCoordinateObject.getZ();
+            lineCoordinatesArrayList.add(new LineCoordinates(nodeX1, nodeY1,nodeX2, nodeY2));
 
         }
 
-        for (String nodeData : nodeDataArray) {
-            String[] coordinates = nodeData.split("_");
-            //if (coordinates.length == 3) {
-                String nodeName = coordinates[0];
-                float nodeX = Float.parseFloat(coordinates[1])*50;
-                float nodeY = Float.parseFloat(coordinates[2])*50;
-                // If you have nodeZ, you can parse it as well (coordinates[2])
-
-                // Add the CircleCoordinates object to the ArrayList
-                circleCoordinatesList.add(new CircleCoordinates((nodeX*(-1)), nodeY,nodeName));
-            //}
-        }
-        this.lineCoordinatesList = lineCoordinatesList;
+        this.lineCoordinatesList = lineCoordinatesArrayList;
         this.circleCoordinatesList = circleCoordinatesList;
         invalidate();
     }
+
+    public Bitmap getBitmap() {
+        return backgroundImage;
+    }
+
 
     public void zoomIn() {
         zoomFactor += 0.1f; // Adjust the increment as per your preference
@@ -156,6 +174,7 @@ public class MyCanvas extends View {
 
         if(lineCoordinatesList!=null){
             for(LineCoordinates lineCoordinates: lineCoordinatesList){
+
                 float startX = getWidth()-lineCoordinates.getStartX();
                 float startY =getHeight() - lineCoordinates.getStartY();
                 float endX = getWidth()-lineCoordinates.getEndX();
@@ -164,7 +183,7 @@ public class MyCanvas extends View {
             }
         }
 
-
+        //System.out.println(circleCoordinatesList.size());
         if (circleCoordinatesList != null) {
             for (CircleCoordinates circleCoordinates : circleCoordinatesList) {
                 nodeX = circleCoordinates.getX();

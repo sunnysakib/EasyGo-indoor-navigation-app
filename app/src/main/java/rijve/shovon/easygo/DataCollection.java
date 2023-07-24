@@ -64,7 +64,7 @@ public class DataCollection extends AppCompatActivity{
 
     //@Extra
     private String previous_node_name="First Node",current_nodeName="";
-    private float previous_node_x=0,previous_node_y = 0, previous_node_z=0;
+    private float previous_node_x=0,previous_node_y = 0, previous_node_z=1;
     private String pre_nodeId;
     private double pre_X;
     private double pre_Y;
@@ -80,7 +80,7 @@ public class DataCollection extends AppCompatActivity{
     private TextView sourceNodeName, sourceNodeInfo;
     private EditText adjacentNodeName, adjacentNodeInfo;
 
-    private TextView previous_nodeTextview,distanceShow;
+    private TextView previous_nodeTextview,distanceShow,floorTextview;
     private Button saveBtn,btncreateNewNode;
 
     @Override
@@ -94,6 +94,7 @@ public class DataCollection extends AppCompatActivity{
         btnSet = findViewById(R.id.setBtn);
         btnShowMap = findViewById(R.id.showMap);
         distanceShow = findViewById(R.id.distance_show);
+        floorTextview = findViewById(R.id.floor);
         previous_nodeTextview  = findViewById(R.id.previous_nodeName);
         previous_nodeTextview.setText(previous_node_name);
         
@@ -114,10 +115,11 @@ public class DataCollection extends AppCompatActivity{
             // @ Get the source Node..
             // @ If (text==start) start the sensor otherwise proceed to save in the database and also toggle the text everytime it's pressed..
             String btnStartTxt = btnStart.getText().toString();
-            if(previous_node_name.isEmpty()){
+
+            if(previous_node_name.isEmpty() || floorTextview.getText().toString().isEmpty()){
                 Toast.makeText(DataCollection.this, "Need to set a Node first", Toast.LENGTH_SHORT).show();
             }
-            if(btnStartTxt.equals("START")){
+            else if(btnStartTxt.equals("START")){
                 // proceed to start sensor
                 accelerometerInfo = new AccelerometerInfo(3);
                 magnetometerInfo = new MagnetometerInfo(5);
@@ -136,12 +138,10 @@ public class DataCollection extends AppCompatActivity{
             }
             else{
                 //stopService;
+                previous_node_z  = Float.parseFloat(floorTextview.getText().toString());
                 stopService(ServiceIntent);
-//                AlertDialog.Builder alertDialog = new AlertDialog.Builder(this);
-//                alertDialog.setView(view);
-//                AlertDialog dialog = alertDialog.create();
-//                dialog.show(); // Showing the dialog here
-
+                float details[] = calculate.calculateData(magnetometerInfo.getDirection(),previous_node_x,previous_node_y,previous_node_z,previous_node_name);
+                Toast.makeText(DataCollection.this, "X: " + details[0]+" Y: "+details[1]+" Z "+details[2]+" Dir: "+magnetometerInfo.getDirection(), Toast.LENGTH_SHORT).show();
 
                 AlertDialog.Builder alertDialog_nodeInfo = new
                         AlertDialog.Builder(this);
@@ -164,8 +164,7 @@ public class DataCollection extends AppCompatActivity{
                     @Override
                     public void onClick(View view) {
                         current_nodeName =  adjacentNodeName.getText().toString();
-                        float details[] = calculate.calculateData(magnetometerInfo.getDirection(),previous_node_x,previous_node_y,previous_node_z,previous_node_name);
-                        Toast.makeText(DataCollection.this, "X: " + details[0]+" Y "+details[1]+" Dir: "+magnetometerInfo.getDirection(), Toast.LENGTH_SHORT).show();
+
 
                         //String nodeInfo = current_nodeName+"---"+details[0]+"---"+details[1]+"---"+details[2];
                         //String edgeInfo = previous_node_name+"___"+current_nodeName+"___"+calculate.getWalkingDistance();
@@ -183,6 +182,7 @@ public class DataCollection extends AppCompatActivity{
                         previous_node_z = details[2];
                         previous_node_name = current_nodeName;
                         previous_nodeTextview.setText(previous_node_name);
+                        floorTextview.setText(Float.toString(previous_node_z));
 
                         //System.out.println(nodeInfo);
                         //System.out.println(edgeInfo);
@@ -192,11 +192,6 @@ public class DataCollection extends AppCompatActivity{
                     }
                 });
 
-
-                //Extra..
-                Random rand = new Random();
-                int n = rand.nextInt(359);
-                //extra
 
 
 
@@ -235,20 +230,19 @@ public class DataCollection extends AppCompatActivity{
             mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Toast.makeText(DataCollection.this, "Node ID " + nodeList.get(i).getID(), Toast.LENGTH_SHORT).show();
+
 
                     pre_nodeId=nodeList.get(i).getID();
                     pre_X=nodeList.get(i).getX();
-                    pre_Y=nodeList.get(i).getX();
-                    pre_Z=nodeList.get(i).getX();
+                    pre_Y=nodeList.get(i).getY();
+                    pre_Z=nodeList.get(i).getZ();
                     previous_node_x = (float)pre_X;
                     previous_node_y = (float)pre_Y;
                     previous_node_z = (float)pre_Z;
+                    floorTextview.setText(Float.toString(previous_node_z));
                     previous_node_name = pre_nodeId;
                     previous_nodeTextview.setText(previous_node_name);
-                    System.out.println(pre_X);
-                    System.out.println(pre_Y);
-                    System.out.println(pre_Z);
+                    Toast.makeText(DataCollection.this, "X: " + previous_node_x+" Z: "+previous_node_z, Toast.LENGTH_SHORT).show();
 
                     dialog.dismiss();
 
@@ -278,6 +272,7 @@ public class DataCollection extends AppCompatActivity{
         if(isReceiverRegistered){
             unregisterReceiver(accelerometer_receiver);
             unregisterReceiver(magnetometer_receiver);
+            unregisterReceiver(gyroscope_receiver);
             stopService(ServiceIntent);
         }
         isReceiverRegistered=false;

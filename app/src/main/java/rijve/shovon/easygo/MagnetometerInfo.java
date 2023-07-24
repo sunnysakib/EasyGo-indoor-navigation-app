@@ -52,7 +52,10 @@ public class MagnetometerInfo {
 
 
     public boolean isDirectionOk(){
-        if(Math.abs(currentDegree-fixed_direction)>10) return false;
+        if(Math.abs(currentDegree-fixed_direction)>10) {
+            System.out.println(fixed_direction+"---"+currentDegree);
+            return false;
+        }
         return true;
     }
 
